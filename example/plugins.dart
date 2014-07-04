@@ -6,7 +6,7 @@ void main() {
   Directory path = new Directory("example" + Platform.pathSeparator + "plugins");
   pm.loadAll(path).then((_) {
     pm.listen("Test", (data) {
-      print(data[0]);
+      print("Received data in loader: ${data[0]}");
       pm.kill("Test");
     });
     Map m = new Map();
