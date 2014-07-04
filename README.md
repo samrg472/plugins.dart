@@ -1,4 +1,4 @@
-plugins.dart
+Plugins
 ============
 
 A simple plugin loading system
