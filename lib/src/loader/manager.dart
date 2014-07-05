@@ -60,6 +60,11 @@ class PluginManager {
     _plugins[plugin] = null;
   }
 
+  /**
+   * The [PluginManager] will stop handling all loaded plugins in the system.
+   * A stop signal will be sent to all plugins signifying it should stop. All
+   * ports will then be closed and all listeners will be canceled.
+   */
   void killAll() {
     Map temp = new Map();
     temp['type'] = QUIT;
