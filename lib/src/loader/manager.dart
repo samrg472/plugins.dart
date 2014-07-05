@@ -16,10 +16,26 @@ class PluginManager {
   final Map<String, List> _plugins = new Map();
 
   /**
-   * Sets the data listener for the [plugin].
+   * Sets the data listener for the [plugin] to [onData]. Any previous listener
+   * will be overridden.
    */
-  void listen(String plugin, void func(Map<String, dynamic> data)) {
-    _plugins[plugin][1].onData(func);
+  void listen(String plugin,
+              void onData(String plugin, Map<dynamic, dynamic> data)) {
+    _plugins[plugin][1].onData((Map<dynamic, dynamic> data) {
+      onData(plugin, data);
+    });
+  }
+
+  /**
+   * Sets the data listener for all plugins to [onData]. Any previous listeners
+   * will be overridden.
+   */
+  void listenAll(void onData(String plugin, Map<dynamic, dynamic> data)) {
+    for (List p in _plugins.values) {
+      p[1].onData((Map<dynamic, dynamic> data) {
+        onData(p[0].name, data);
+      });
+    }
   }
 
   /**
