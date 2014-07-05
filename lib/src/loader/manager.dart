@@ -22,6 +22,10 @@ class PluginManager {
     _plugins[plugin][1].onData(func);
   }
 
+  /**
+   * Sends a message to [plugin]. The [data] is what the [plugin] will
+   * receive. [type] can be specified to do anything specific.
+   */
   void send(String plugin, Map<dynamic, dynamic> data, [int type = NORMAL]) {
     var wrapped = new Map();
     wrapped['type'] = type;
@@ -29,6 +33,10 @@ class PluginManager {
     _plugins[plugin][0].sp.send(wrapped);
   }
 
+  /**
+   * Sends a message to all plugins. The [data] is what all plugins will
+   * receive. [type] can be specified to do anything specific.
+   */
   void sendAll(Map<dynamic, dynamic> data, [int type = NORMAL]) {
     var wrapped = new Map();
     wrapped['type'] = type;
@@ -45,19 +53,21 @@ class PluginManager {
    */
   void kill(String plugin) {
     Map temp = new Map();
-    temp['type'] = 0; // Quit type
-    _plugins[plugin][0].sp;
+    temp['type'] = QUIT;
+    _plugins[plugin][0].sp.send(temp);
     _plugins[plugin][0].rp.close();
     _plugins[plugin][1].cancel();
+    _plugins[plugin] = null;
   }
 
   void killAll() {
     Map temp = new Map();
-    temp['type'] = 0; // Quit type
+    temp['type'] = QUIT;
     for (List p in _plugins.values) {
-      p[0].sp;
+      p[0].sp.send(temp);
       p[0].rp.close();
       p[1].cancel();
+      _plugins[p[0].name] = null;
     }
   }
 
