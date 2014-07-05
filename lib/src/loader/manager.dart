@@ -51,6 +51,16 @@ class PluginManager {
     _plugins[plugin][1].cancel();
   }
 
+  void killAll() {
+    Map temp = new Map();
+    temp['type'] = 0; // Quit type
+    for (List p in _plugins.values) {
+      p[0].sp;
+      p[0].rp.close();
+      p[1].cancel();
+    }
+  }
+
   /**
    * Properly adds the [loader] to the plugins registry. [args] can be
    * supplied to the spawned plugin.

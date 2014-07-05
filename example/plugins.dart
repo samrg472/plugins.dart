@@ -7,7 +7,7 @@ void main() {
   pm.loadAll(path).then((_) {
     pm.listen("Test", (data) {
       print("Received data in loader: ${data[0]}");
-      pm.kill("Test");
+      pm.killAll();
     });
     Map m = new Map();
     m[0] = "Hello from loader!";
