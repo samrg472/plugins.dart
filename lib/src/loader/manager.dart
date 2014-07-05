@@ -95,6 +95,7 @@ class PluginManager {
   /**
    * Properly adds the [loader] to the plugins registry. [args] can be
    * supplied to the spawned plugin.
+   * Returns a [Future] with a [Plugin] as the value.
    */
   Future load(PluginLoader loader, [List<String> args]) {
     var port = new ReceivePort();
@@ -125,7 +126,7 @@ class PluginManager {
           wrapper[0] = p;
           wrapper[1] = ss;
           ss.onData((data) {});
-          completer.complete();
+          completer.complete(p);
         }
       });
     });
@@ -136,6 +137,7 @@ class PluginManager {
    * [directory] is the location of all the plugins. [args] can be provided to
    * all the spawned plugins. If individual arguments are sent to each plugin
    * see [load] for sending different arguments to each [PluginLoader].
+   * Returns a [Future] with a [List] of [Future]'s as obtained from [load].
    */
   Future loadAll(Directory directory, [List<String> args]) {
     List<Future> futures = [];
@@ -151,7 +153,8 @@ class PluginManager {
 
 /**
  * Carries information about a given loaded plugin. Including the ports to
- * communicate with the plugin.
+ * communicate with the plugin. It is recommended to use [PluginManager] to
+ * interact with a [Plugin].
  */
 class Plugin {
 
@@ -176,4 +179,9 @@ class Plugin {
   final ReceivePort rp;
 
   Plugin(this.isolate, this.name, this.sp, this.rp);
+
+  @override
+  String toString() {
+    return name;
+  }
 }

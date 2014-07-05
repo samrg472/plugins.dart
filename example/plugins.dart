@@ -4,7 +4,9 @@ import 'dart:io';
 void main() {
   PluginManager pm = new PluginManager();
   Directory path = new Directory("example" + Platform.pathSeparator + "plugins");
-  pm.loadAll(path).then((_) {
+  pm.loadAll(path).then((List<Plugin> plugins) {
+    print("Plugins registered: ${plugins}");
+
     pm.listenAll((name, data) {
       print("Received data from plugin '$name': ${data[0]}");
       pm.killAll();
