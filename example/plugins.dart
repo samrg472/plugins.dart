@@ -20,8 +20,8 @@ void main() {
         pm.kill(name);
       }
     });
-    Map m = new Map();
-    m[0] = "Hello from loader!";
-    pm.sendAll(m);
+
+    pm.sendAll({0: "Hello from loader!"});
+    pm.get("Requester", "loader-command", {});
   });
 }

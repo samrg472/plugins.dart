@@ -10,6 +10,7 @@ class Receiver {
   final RequestManager _requests = new RequestManager();
 
   StreamSubscription _ss;
+  Function _requestCallback = (Request req) {};
 
   /**
    * Whether the plugin should stop handling everything and quit. This variable
@@ -63,6 +64,13 @@ class Receiver {
   }
 
   /**
+   * Listens to requests made by the plugin loader.
+   */
+  void listenRequest(void callback(Request req)) {
+    _requestCallback = callback;
+  }
+
+  /**
    * Handles receiving data from the plugin loader.
    * Returns the data from the received information and processing
    * any types.
@@ -80,8 +88,11 @@ class Receiver {
         }
         return data['data'];
       case 2: // requested data
-
-        return data; // TODO
+        int uid = data['uid'];
+        String command = data['command'];
+        Map<dynamic, dynamic> unwrapped = data['data'];
+        _requestCallback(new Request(_sp, uid, command, unwrapped));
+        return null;
       default:
         throw new Exception("Invalid type received");
     }
