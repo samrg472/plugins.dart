@@ -5,21 +5,6 @@ part of plugins.loader;
  */
 class PluginManager {
 
-  /**
-   * Sent to plugins to tell them to quit properly.
-   */
-  static const int QUIT = 0;
-
-  /**
-   * Sends data normally to the plugin to handle.
-   */
-  static const int NORMAL = 1;
-
-  /**
-   * Sends a request to the plugin that expects data back.
-   */
-  static const int GET = 2;
-
   /*
    * List implementation contains:
    * List[0] = Plugin
@@ -46,7 +31,7 @@ class PluginManager {
                 void onData(String plugin, Map<dynamic, dynamic> data)) {
     var p = _plugins[plugin];
     p[1].onData((Map<dynamic, dynamic> _data) {
-      if (_data['type'] == GET) {
+      if (_data['type'] == SendType.GET) {
         int uid = _data['uid'];
         String command = _data['command'];
         Map<dynamic, dynamic> unwrapped = _data['data'];
@@ -88,7 +73,7 @@ class PluginManager {
    * Sends a message to [plugin]. The [data] is what the [plugin] will
    * receive. [type] can be specified to do anything specific.
    */
-  void send(String plugin, Map<dynamic, dynamic> data,[int type = NORMAL]) {
+  void send(String plugin, Map<dynamic, dynamic> data, [int type = SendType.NORMAL]) {
     var wrapped = <String, dynamic>{};
     wrapped['type'] = type;
     wrapped['data'] = data;
@@ -99,7 +84,7 @@ class PluginManager {
    * Sends a message to all plugins. The [data] is what all plugins will
    * receive. [type] can be specified to do anything specific.
    */
-  void sendAll(Map<dynamic, dynamic> data, [int type = NORMAL]) {
+  void sendAll(Map<dynamic, dynamic> data, [int type = SendType.NORMAL]) {
     var wrapped = <String, dynamic>{};
     wrapped['type'] = type;
     wrapped['data'] = data;
@@ -115,7 +100,7 @@ class PluginManager {
     Completer<Map<dynamic, dynamic>> com = new Completer<Map>();
 
     var wrapped = <String, dynamic>{};
-    wrapped['type'] = GET;
+    wrapped['type'] = SendType.GET;
     wrapped['uid'] = _requests.queue(com);
     wrapped['command'] = command;
     wrapped['data'] = data;
@@ -132,7 +117,7 @@ class PluginManager {
    */
   void kill(String plugin) {
     Map temp = new Map();
-    temp['type'] = QUIT;
+    temp['type'] = SendType.QUIT;
     _plugins[plugin][0].sp.send(temp);
     _plugins[plugin][0].rp.close();
     _plugins[plugin][1].cancel();
@@ -146,7 +131,7 @@ class PluginManager {
    */
   void killAll() {
     Map temp = new Map();
-    temp['type'] = QUIT;
+    temp['type'] = SendType.QUIT;
     for (List p in _plugins.values) {
       p[0].sp.send(temp);
       p[0].rp.close();

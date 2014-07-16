@@ -77,17 +77,17 @@ class Receiver {
    */
   Map<dynamic, dynamic> handle(Map<String, dynamic> data) {
     switch (data['type']) {
-      case 0: // quit
+      case SendType.QUIT:
         _shouldQuit = true;
         _ss.cancel();
         return null;
-      case 1: // normal
+      case SendType.NORMAL:
         if ((data['uid'] != null) && (data['command'] != null)) {
           _requests.complete(data['uid'], data['command'], data['data']);
           return null;
         }
         return data['data'];
-      case 2: // requested data
+      case SendType.GET:
         int uid = data['uid'];
         String command = data['command'];
         Map<dynamic, dynamic> unwrapped = data['data'];
