@@ -54,7 +54,7 @@ void main(List<String> args, SendPort port) {
   });
 }
 ```
-
+The examples can give you more insight for more powerful APIs.
 Visit the documentation for more information about the APIs.
 Open an [issue](https://github.com/samrg472/plugins.dart/issues) for any
 problems or suggestions.
