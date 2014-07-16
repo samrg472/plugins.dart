@@ -5,24 +5,58 @@ part of plugins.loader;
  */
 class PluginManager {
 
+  /**
+   * Sent to plugins to tell them to quit properly.
+   */
   static const int QUIT = 0;
+
+  /**
+   * Sends data normally to the plugin to handle.
+   */
   static const int NORMAL = 1;
+
+  /**
+   * Sends a request to the plugin that expects data back.
+   */
+  static const int GET = 2;
 
   /*
    * List implementation contains:
    * List[0] = Plugin
    * List[1] = StreamSubscription
+   * List[2] = Function
    */
   final Map<String, List> _plugins = new Map();
+  final RequestManager _requests = new RequestManager();
+
+  /**
+   * Gets a [List] of all the loaded plugin names.
+   */
+  List<String> get plugins {
+    var p = [];
+    p.addAll(_plugins.keys);
+    return p;
+  }
 
   /**
    * Sets the data listener for the [plugin] to [onData]. Any previous listener
    * will be overridden.
    */
   void listen(String plugin,
-              void onData(String plugin, Map<dynamic, dynamic> data)) {
-    _plugins[plugin][1].onData((Map<dynamic, dynamic> data) {
-      onData(plugin, data);
+                void onData(String plugin, Map<dynamic, dynamic> data)) {
+    var p = _plugins[plugin];
+    p[1].onData((Map<dynamic, dynamic> _data) {
+      if (_data['type'] == GET) {
+        int uid = _data['uid'];
+        String command = _data['command'];
+        Map<dynamic, dynamic> unwrapped = _data['data'];
+        p[2](p[0].name, new Request(p[0].sp, uid, command, unwrapped));
+      } else {
+        if ((_data['uid'] != null) && (_data['command'] != null))
+          _requests.complete(_data['uid'], _data['command'], _data['data']);
+        else
+          onData(p[0].name, _data['data']);
+      }
     });
   }
 
@@ -31,19 +65,31 @@ class PluginManager {
    * will be overridden.
    */
   void listenAll(void onData(String plugin, Map<dynamic, dynamic> data)) {
-    for (List p in _plugins.values) {
-      p[1].onData((Map<dynamic, dynamic> data) {
-        onData(p[0].name, data);
-      });
-    }
+    for (String p in _plugins.keys)
+      listen(p, onData);
+  }
+
+  /**
+   * Listens to [GET] requests.
+   */
+  void listenRequest(String plugin, void onData(String plugin, Request data)) {
+    _plugins[plugin][2] = onData;
+  }
+
+  /**
+   * Listens to [GET] requests on all plugins.
+   */
+  void listenAllRequest(void onData(String plugin, Request data)) {
+    for (String p in _plugins.keys)
+      listenRequest(p, onData);
   }
 
   /**
    * Sends a message to [plugin]. The [data] is what the [plugin] will
    * receive. [type] can be specified to do anything specific.
    */
-  void send(String plugin, Map<dynamic, dynamic> data, [int type = NORMAL]) {
-    var wrapped = new Map();
+  void send(String plugin, Map<dynamic, dynamic> data,[int type = NORMAL]) {
+    var wrapped = <String, dynamic>{};
     wrapped['type'] = type;
     wrapped['data'] = data;
     _plugins[plugin][0].sp.send(wrapped);
@@ -54,11 +100,28 @@ class PluginManager {
    * receive. [type] can be specified to do anything specific.
    */
   void sendAll(Map<dynamic, dynamic> data, [int type = NORMAL]) {
-    var wrapped = new Map();
+    var wrapped = <String, dynamic>{};
     wrapped['type'] = type;
     wrapped['data'] = data;
     for (List p in _plugins.values)
       p[0].sp.send(wrapped);
+  }
+
+  /**
+   * Get data from the plugin
+   */
+  Future<Map<dynamic, dynamic>> get(String plugin,
+                                    String command, Map<dynamic, dynamic> data) {
+    Completer<Map<dynamic, dynamic>> com = new Completer<Map>();
+
+    var wrapped = <String, dynamic>{};
+    wrapped['type'] = GET;
+    wrapped['uid'] = _requests.queue(com);
+    wrapped['command'] = command;
+    wrapped['data'] = data;
+    _plugins[plugin][0].sp.send(wrapped);
+
+    return com.future;
   }
 
   /**
@@ -120,11 +183,12 @@ class PluginManager {
           }
 
           t.cancel();
-          var wrapper = new List(2);
+          var wrapper = new List(3);
           _plugins[p.name] = wrapper;
 
           wrapper[0] = p;
           wrapper[1] = ss;
+          wrapper[2] = (String p, Request r) {};
           ss.onData((data) {});
           completer.complete(p);
         }
