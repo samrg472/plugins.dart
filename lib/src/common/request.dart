@@ -14,9 +14,9 @@ class RequestManager {
   }
 
   int queue(Completer completer) {
-    int uid = _rand.nextInt(10000);
+    int uid = _rand.nextInt(100000);
     while (_requests.containsKey(uid))
-      uid = _rand.nextInt(10000);
+      uid = _rand.nextInt(100000);
     _requests[uid] = completer;
     return uid;
   }
