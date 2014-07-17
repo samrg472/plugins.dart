@@ -35,7 +35,7 @@ class Receiver {
   Future<Map<dynamic, dynamic>> get(String command, Map<dynamic, dynamic> data) {
     Completer<Map<dynamic, dynamic>> com = new Completer<Map>();
     Map<String, dynamic> wrapped = {
-      'type': 2,
+      'type': SendType.GET,
       'uid': _requests.queue(com),
       'command': command,
       'data': data
@@ -46,7 +46,7 @@ class Receiver {
 
   void send(Map<dynamic, dynamic> data) {
     Map<String, dynamic> wrapped = {
-      'type': 1,
+      'type': SendType.NORMAL,
       'data': data
     };
     _sp.send(wrapped);

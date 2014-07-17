@@ -51,7 +51,7 @@ class Request {
    */
   void reply(Map<dynamic, dynamic> info) {
     var wrapped = <String, dynamic>{
-      'type': 1,
+      'type': SendType.NORMAL,
       'uid': uid,
       'command': command,
       'data': info
