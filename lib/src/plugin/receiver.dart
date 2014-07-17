@@ -1,6 +1,11 @@
 part of plugins.plugin;
 
 /**
+ * Callback for listening to requests.
+ */
+typedef void RequestCallback(Request req);
+
+/**
  * Wrapper around plugin receiving events from the loader.
  */
 class Receiver {
@@ -10,7 +15,7 @@ class Receiver {
   final RequestManager _requests = new RequestManager();
 
   StreamSubscription _ss;
-  Function _requestCallback = (Request req) {};
+  RequestCallback _requestCallback = (Request req) {};
 
   /**
    * Whether the plugin should stop handling everything and quit. This variable
