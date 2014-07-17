@@ -10,6 +10,7 @@ class RequestManager {
     if (com == null)
       throw new Exception("Attempt to complete an invalid request");
     com.complete(data);
+    _requests.remove(uid);
   }
 
   int queue(Completer completer) {
