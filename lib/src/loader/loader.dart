@@ -9,24 +9,29 @@ part of plugins.loader;
 class PluginLoader {
 
   /**
-   * The location of the plugin
+   * The location of the plugin.
    */
   final Directory directory;
 
-  String _name;
+  var _conf;
 
   /**
-   * Name of the plugin, returns null if there is no pubspec.yaml found
+   * Gets the parsed pubspec. Returns null if there is no pubspec.yaml found.
    */
-  String get name {
-    if (_name != null)
-      return _name;
+  get pubspec {
+    if (_conf != null) return _conf;
     var loc = path.joinAll([directory.absolute.path, "pubspec.yaml"]);
     var file = new File(loc);
-    if (!file.existsSync())
-      return null;
-    var conf = loadYaml(file.readAsStringSync());
-    return _name = conf['name'];
+    if (!file.existsSync()) return null;
+    return _conf = loadYaml(file.readAsStringSync());
+  }
+
+  /**
+   * Name of the plugin, returns null if there is no pubspec.yaml found.
+   */
+  String get name {
+    if (pubspec != null) return pubspec['name'];
+    return null;
   }
 
   PluginLoader(this.directory);

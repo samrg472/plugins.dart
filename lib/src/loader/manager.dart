@@ -162,7 +162,7 @@ class PluginManager {
 
       ss.onData((data) {
         if (data is SendPort) {
-          Plugin p = new Plugin(iso, loader.name, data, port);
+          Plugin p = new Plugin(iso, loader.pubspec, data, port);
           if (_plugins.containsKey(p.name)) {
             throw new Exception("Plugin '${p.name}' was already registered");
           }
@@ -213,9 +213,14 @@ class Plugin {
   final Isolate isolate;
 
   /**
-   * Plugin name determined from the pubspec.yaml
+   * Plugin name determined from the pubspec.yaml.
    */
-  final String name;
+  String get name => pubspec['name'];
+
+  /**
+   * The parsed pubspec.yaml file.
+   */
+  final pubspec;
 
   /**
    * Port for sending data to the plugin.
@@ -227,7 +232,7 @@ class Plugin {
    */
   final ReceivePort rp;
 
-  Plugin(this.isolate, this.name, this.sp, this.rp);
+  Plugin(this.isolate, this.pubspec, this.sp, this.rp);
 
   @override
   String toString() {
