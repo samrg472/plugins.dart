@@ -24,6 +24,15 @@ class PluginManager {
   }
 
   /**
+   * Returns an instance of the available plugin, null if there is no such
+   * plugin.
+   */
+  Plugin plugin(String plugin) {
+    List p = _plugins[plugin];
+    return p != null ? p[0] : null;
+  }
+
+  /**
    * Sets the data listener for the [plugin] to [onData]. Any previous listener
    * will be overridden.
    */
