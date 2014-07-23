@@ -40,16 +40,33 @@ class PluginManager {
                 void onData(String plugin, Map<dynamic, dynamic> data)) {
     var p = _plugins[plugin];
     p[1].onData((Map<dynamic, dynamic> _data) {
-      if (_data['type'] == SendType.GET) {
-        int uid = _data['uid'];
-        String command = _data['command'];
-        Map<dynamic, dynamic> unwrapped = _data['data'];
-        p[2](p[0].name, new Request(p[0].sp, uid, command, unwrapped));
-      } else {
-        if ((_data['uid'] != null) && (_data['command'] != null))
-          _requests.complete(_data['uid'], _data['command'], _data['data']);
-        else
-          onData(p[0].name, _data['data']);
+      switch (_data['type']) {
+        case SendType.GET:
+          int uid = _data['uid'];
+          String command = _data['command'];
+          Map<dynamic, dynamic> unwrapped = _data['data'];
+          p[2](p[0].name, new Request(p[0].sp, uid, command, unwrapped));
+          break;
+        case SendType.INTERCOM:
+          String target = _data['plugin'];
+          var recv = _data['data'];
+          if (!_plugins.containsKey(target)) {
+            throw new Exception("Attempting to communicate to an unloaded plugin: $target");
+          }
+          var wrapped = <String, dynamic>{};
+          wrapped['type'] = SendType.INTERCOM;
+          wrapped['from'] = plugin;
+          wrapped['data'] = recv;
+          _plugins[target][0].sp.send(wrapped);
+          break;
+        case SendType.NORMAL:
+          // Check if this is a request
+          if ((_data['uid'] != null) && (_data['command'] != null)) {
+            _requests.complete(_data['uid'], _data['command'], _data['data']);
+          } else {
+            onData(p[0].name, _data['data']);
+          }
+          break;
       }
     });
   }
@@ -171,19 +188,19 @@ class PluginManager {
 
       ss.onData((data) {
         if (data is SendPort) {
+          t.cancel();
           Plugin p = new Plugin(iso, loader.pubspec, data, port);
           if (_plugins.containsKey(p.name)) {
             throw new Exception("Plugin '${p.name}' was already registered");
           }
 
-          t.cancel();
           var wrapper = new List(3);
-          _plugins[p.name] = wrapper;
-
           wrapper[0] = p;
           wrapper[1] = ss;
           wrapper[2] = (String p, Request r) {};
           ss.onData((data) {});
+
+          _plugins[p.name] = wrapper;
           completer.complete(p);
         }
       });

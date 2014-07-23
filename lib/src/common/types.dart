@@ -20,4 +20,9 @@ class SendType {
    * Sends a request to the plugin that expects data back.
    */
   static const int GET = 2;
+
+  /**
+   * A plugin sends data to another plugin.
+   */
+  static const int INTERCOM = 3;
 }

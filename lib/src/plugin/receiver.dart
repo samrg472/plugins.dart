@@ -6,6 +6,11 @@ part of plugins.plugin;
 typedef void RequestCallback(Request req);
 
 /**
+ * Callback for listening to intercommunications from other plugins.
+ */
+typedef void IntercomCallback(String plugin, Map<dynamic, dynamic> data);
+
+/**
  * Wrapper around plugin receiving events from the loader.
  */
 class Receiver {
@@ -16,6 +21,7 @@ class Receiver {
 
   StreamSubscription _ss;
   RequestCallback _requestCallback = (Request req) {};
+  IntercomCallback _interCallback = (String plugin, Map data) {};
 
   /**
    * Whether the plugin should stop handling everything and quit. This variable
@@ -32,6 +38,10 @@ class Receiver {
     });
   }
 
+  /**
+   * [command] is the data to get. [data] is the parameters of the [command].
+   * Returns a [Future] with the received data.
+   */
   Future<Map<dynamic, dynamic>> get(String command, Map<dynamic, dynamic> data) {
     Completer<Map<dynamic, dynamic>> com = new Completer<Map>();
     Map<String, dynamic> wrapped = {
@@ -44,9 +54,25 @@ class Receiver {
     return com.future;
   }
 
+  /**
+   * Sends [data] back to the loader.
+   */
   void send(Map<dynamic, dynamic> data) {
     Map<String, dynamic> wrapped = {
       'type': SendType.NORMAL,
+      'data': data
+    };
+    _sp.send(wrapped);
+  }
+
+  /**
+   * Sends [data] to the [plugin]. The [plugin] must be loaded otherwise an
+   * exception will be thrown on the loader side.
+   */
+  void intercom(String plugin, Map<dynamic, dynamic> data) {
+    Map<String, dynamic> wrapped = {
+      'type': SendType.INTERCOM,
+      'plugin': plugin,
       'data': data
     };
     _sp.send(wrapped);
@@ -76,6 +102,13 @@ class Receiver {
   }
 
   /**
+   * Listens to incoming messages from other plugins.
+   */
+  void listenIntercom(void callback(String plugin, Map data)) {
+    _interCallback = callback;
+  }
+
+  /**
    * Handles receiving data from the plugin loader.
    * Returns the data from the received information and processing
    * any types.
@@ -97,6 +130,9 @@ class Receiver {
         String command = data['command'];
         Map<dynamic, dynamic> unwrapped = data['data'];
         _requestCallback(new Request(_sp, uid, command, unwrapped));
+        return null;
+      case SendType.INTERCOM:
+        _interCallback(data['from'], data['data']);
         return null;
       default:
         throw new Exception("Invalid type received");
