@@ -154,7 +154,7 @@ class PluginManager {
    * supplied to the spawned plugin.
    * Returns a [Future] with a [Plugin] as the value.
    */
-  Future load(PluginLoader loader, [List<String> args]) {
+  Future load(PluginLoader loader, {List<String> args}) {
     var port = new ReceivePort();
     if (loader.name == null)
       throw new Exception("Unnamed plugin at: ${loader.directory.path}");
@@ -197,13 +197,13 @@ class PluginManager {
    * see [load] for sending different arguments to each [PluginLoader].
    * Returns a [Future] with a [List] of [Future]'s as obtained from [load].
    */
-  Future loadAll(Directory directory, [List<String> args]) {
+  Future loadAll(Directory directory, {List<String> args}) {
     List<Future> futures = [];
     directory.listSync(followLinks: false).forEach((fse) {
       if (!(fse is Directory))
         return;
       var loader = new PluginLoader(fse);
-      futures.add(load(loader, args));
+      futures.add(load(loader, args: args));
     });
     return Future.wait(futures);
   }
