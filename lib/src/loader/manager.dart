@@ -194,12 +194,14 @@ class PluginManager {
   /**
    * [directory] is the location of all the plugins. [args] can be provided to
    * all the spawned plugins. If individual arguments are sent to each plugin
-   * see [load] for sending different arguments to each [PluginLoader].
+   * see [load] for sending different arguments to each [PluginLoader]. The
+   * loader can follow symbolic links if [followLinks] is true.
    * Returns a [Future] with a [List] of [Future]'s as obtained from [load].
    */
-  Future loadAll(Directory directory, {List<String> args}) {
+  Future loadAll(Directory directory, {List<String> args,
+                                        bool followLinks: true}) {
     List<Future> futures = [];
-    directory.listSync(followLinks: false).forEach((fse) {
+    directory.listSync(followLinks: followLinks).forEach((fse) {
       if (!(fse is Directory))
         return;
       var loader = new PluginLoader(fse);
