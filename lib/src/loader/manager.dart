@@ -147,7 +147,7 @@ class PluginManager {
     _plugins[plugin][0].sp.send(temp);
     _plugins[plugin][0].rp.close();
     _plugins[plugin][1].cancel();
-    _plugins[plugin] = null;
+    _plugins.remove(plugin);
   }
 
   /**
@@ -158,11 +158,12 @@ class PluginManager {
   void killAll() {
     Map temp = new Map();
     temp['type'] = SendType.QUIT;
-    for (List p in _plugins.values) {
+    var plugins = new List.from(_plugins.values);
+    _plugins.clear();
+    for (List p in plugins) {
       p[0].sp.send(temp);
       p[0].rp.close();
       p[1].cancel();
-      _plugins[p[0].name] = null;
     }
   }
 
