@@ -15,7 +15,10 @@ void main(List<String> args, SendPort port) {
 
     rec.get("sample", {}).then((Map data) {
       print("[Requester] Value of sample: ${data[0]}");
-      rec.intercom("Test", {0: "Hello test!"});
+      rec.get("plugins", {}).then((Map _data) {
+        print("[Requester] Retrieved loaded plugins: " + _data['plugins'].join(", "));
+        rec.intercom("Test", {0: "Hello test!"});
+      });
     });
   });
 }

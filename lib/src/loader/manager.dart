@@ -45,7 +45,12 @@ class PluginManager {
           int uid = _data['uid'];
           String command = _data['command'];
           Map<dynamic, dynamic> unwrapped = _data['data'];
-          p[2](p[0].name, new Request(p[0].sp, uid, command, unwrapped));
+          Request req = new Request(p[0].sp, uid, command, unwrapped);
+          if (command == "plugins") {
+            req.reply({ 'plugins': plugins });
+          } else {
+            p[2](p[0].name, req);
+          }
           break;
         case SendType.INTERCOM:
           String target = _data['plugin'];
