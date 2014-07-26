@@ -10,6 +10,13 @@ void main() {
     print("[Plugins] Plugins registered: ${plugins}");
 
     pm.listenAllRequest((String plugin, Request req) {
+      if (req.command == "test") {
+        req.reply({ "should": true });
+        return;
+      } else if (req.command == "test-nocall") {
+        req.reply({ "should": false });
+        return;
+      }
       print("[Plugins] Received request from '$plugin' for command '${req.command}'");
       req.reply({0: 'Isn\'t this just awesome?'});
     });

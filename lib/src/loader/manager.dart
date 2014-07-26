@@ -119,11 +119,10 @@ class PluginManager {
   }
 
   /**
-   * Get data from the plugin
+   * Get data from the plugin.
    */
-  Future<Map<dynamic, dynamic>> get(String plugin,
-                                    String command, Map<dynamic, dynamic> data) {
-    Completer<Map<dynamic, dynamic>> com = new Completer<Map>();
+  ConditionalFuture<Map> get(String plugin, String command, Map data) {
+    ConditionalCompleter<Map> com = new ConditionalCompleter<Map>();
 
     var wrapped = _commonWrapped(SendType.GET, data);
     wrapped['uid'] = _requests.queue(com);

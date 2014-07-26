@@ -11,7 +11,13 @@ void main(List<String> args, SendPort port) {
 
   rec.listen((Map<dynamic, dynamic> data) {
     print("[Test] Received data: ${data[0]}");
-    rec.intercom("Requester", {0: "Hello requester!"});
-    rec.send({0: "Hello from plugin!"});
+    rec.get("test", {}).callIf((Map data) => data['should']).then((Map data) {
+      rec.intercom("Requester", {0: "Hello requester!"});
+      rec.send({0: "Hello from plugin!"});
+    });
+
+    rec.get("test-nocall", {}).callIf((Map data) => data['should']).then((Map data) {
+      print("[Test] This is never called");
+    });
   });
 }

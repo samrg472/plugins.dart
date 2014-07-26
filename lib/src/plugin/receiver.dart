@@ -42,8 +42,8 @@ class Receiver {
    * [command] is the data to get. [data] is the parameters of the [command].
    * Returns a [Future] with the received data.
    */
-  Future<Map<dynamic, dynamic>> get(String command, Map<dynamic, dynamic> data) {
-    Completer<Map<dynamic, dynamic>> com = new Completer<Map>();
+  ConditionalFuture<Map> get(String command, Map data) {
+    ConditionalCompleter<Map> com = new ConditionalCompleter<Map>();
     Map<String, dynamic> wrapped = {
       'type': SendType.GET,
       'uid': _requests.queue(com),
