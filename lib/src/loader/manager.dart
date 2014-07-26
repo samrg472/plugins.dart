@@ -58,11 +58,9 @@ class PluginManager {
           if (!_plugins.containsKey(target)) {
             throw new Exception("Attempting to communicate to an unloaded plugin: $target");
           }
-          var wrapped = <String, dynamic>{};
-          wrapped['type'] = SendType.INTERCOM;
+          var wrapped = _commonWrapped(SendType.INTERCOM, recv);
           wrapped['from'] = plugin;
-          wrapped['data'] = recv;
-          _plugins[target][0].sp.send(wrapped);
+          _sendUnwrapped(target, wrapped);
           break;
         case SendType.NORMAL:
           // Check if this is a request
@@ -105,10 +103,8 @@ class PluginManager {
    * receive. [type] can be specified to do anything specific.
    */
   void send(String plugin, Map<dynamic, dynamic> data, [int type = SendType.NORMAL]) {
-    var wrapped = <String, dynamic>{};
-    wrapped['type'] = type;
-    wrapped['data'] = data;
-    _plugins[plugin][0].sp.send(wrapped);
+    var wrapped = _commonWrapped(type, data);
+    _sendUnwrapped(plugin, wrapped);
   }
 
   /**
@@ -116,11 +112,10 @@ class PluginManager {
    * receive. [type] can be specified to do anything specific.
    */
   void sendAll(Map<dynamic, dynamic> data, [int type = SendType.NORMAL]) {
-    var wrapped = <String, dynamic>{};
-    wrapped['type'] = type;
-    wrapped['data'] = data;
-    for (List p in _plugins.values)
-      p[0].sp.send(wrapped);
+    var wrapped = _commonWrapped(type, data);
+    for (String p in _plugins.keys) {
+      _sendUnwrapped(p, wrapped);
+    }
   }
 
   /**
@@ -130,12 +125,10 @@ class PluginManager {
                                     String command, Map<dynamic, dynamic> data) {
     Completer<Map<dynamic, dynamic>> com = new Completer<Map>();
 
-    var wrapped = <String, dynamic>{};
-    wrapped['type'] = SendType.GET;
+    var wrapped = _commonWrapped(SendType.GET, data);
     wrapped['uid'] = _requests.queue(com);
     wrapped['command'] = command;
-    wrapped['data'] = data;
-    _plugins[plugin][0].sp.send(wrapped);
+    _sendUnwrapped(plugin, wrapped);
 
     return com.future;
   }
@@ -147,8 +140,7 @@ class PluginManager {
    * canceled.
    */
   void kill(String plugin) {
-    Map temp = new Map();
-    temp['type'] = SendType.QUIT;
+    var temp = { "type": SendType.QUIT };
     _plugins[plugin][0].sp.send(temp);
     _plugins[plugin][0].rp.close();
     _plugins[plugin][1].cancel();
@@ -161,8 +153,7 @@ class PluginManager {
    * ports will then be closed and all listeners will be canceled.
    */
   void killAll() {
-    Map temp = new Map();
-    temp['type'] = SendType.QUIT;
+    var temp = { "type": SendType.QUIT };
     var plugins = new List.from(_plugins.values);
     _plugins.clear();
     for (List p in plugins) {
@@ -231,6 +222,14 @@ class PluginManager {
       futures.add(load(loader, args: args));
     });
     return Future.wait(futures);
+  }
+
+  Map<String, dynamic> _commonWrapped(int type, Map data) {
+    return { "type": type, "data": data };
+  }
+
+  void _sendUnwrapped(String plugin, Map wrapped) {
+    _plugins[plugin][0].sp.send(wrapped);
   }
 }
 
