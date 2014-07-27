@@ -1,5 +1,5 @@
 name: plugins
-version: 0.2.2
+version: 1.0.0
 author: samrg472 <samrg472@gmail.com>
 description: A simple plugin loading system
 homepage: https://github.com/samrg472/plugins.dart
