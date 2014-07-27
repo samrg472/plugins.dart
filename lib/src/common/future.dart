@@ -39,7 +39,7 @@ class ConditionalFuture<T> implements Future<T> {
   Future then(onValue(T value), { Function onError }) {
     return _future.then((T value) {
       if (_condition(value)) {
-        onValue(value);
+        return onValue(value);
       }
     }, onError: onError);
   }
