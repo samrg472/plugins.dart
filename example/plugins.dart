@@ -6,7 +6,7 @@ void main() {
   Directory path = new Directory("example" + Platform.pathSeparator + "plugins");
   int killReady = 0;
 
-  pm.loadAll(path).then((List<Plugin> plugins) {
+  pm.loadAll(path, followLinks: false).then((List<Plugin> plugins) {
     print("[Plugins] Plugins registered: ${plugins}");
 
     pm.listenAllRequest((String plugin, Request req) {

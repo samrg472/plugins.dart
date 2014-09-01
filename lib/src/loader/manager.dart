@@ -212,7 +212,7 @@ class PluginManager {
    * Returns a [Future] with a [List] of [Future]'s as obtained from [load].
    */
   Future loadAll(Directory directory, {List<String> args,
-                                        bool followLinks: false}) {
+                                        bool followLinks: true}) {
     List<Future> futures = [];
     directory.listSync(followLinks: followLinks).forEach((fse) {
       if (fse is! Directory) {
