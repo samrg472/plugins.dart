@@ -215,9 +215,14 @@ class PluginManager {
                                         bool followLinks: true}) {
     List<Future> futures = [];
     directory.listSync(followLinks: followLinks).forEach((fse) {
-      if (!(fse is Directory))
+      if (fse is! Directory) {
         return;
-      var loader = new PluginLoader(fse);
+      }
+      var dir = fse as Directory;
+      if (dir.listSync().every((entity) => entity is Link)) {
+        return;
+      }
+      var loader = new PluginLoader(dir);
       futures.add(load(loader, args: args));
     });
     return Future.wait(futures);
