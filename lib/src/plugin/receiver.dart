@@ -118,6 +118,7 @@ class Receiver {
       case SendType.QUIT:
         _shouldQuit = true;
         _ss.cancel();
+        _rp.close();
         return null;
       case SendType.NORMAL:
         if ((data['uid'] != null) && (data['command'] != null)) {
