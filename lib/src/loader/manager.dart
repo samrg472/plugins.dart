@@ -18,9 +18,7 @@ class PluginManager {
    * Gets a [List] of all the loaded plugin names.
    */
   List<String> get plugins {
-    var p = [];
-    p.addAll(_plugins.keys);
-    return p;
+    return new List.from(_plugins.keys);
   }
 
   /**
@@ -207,6 +205,19 @@ class PluginManager {
     return completer.future;
   }
 
+  Future loadFromCache(String name, {List<String> args,
+                                      String host: "pub.dartlang.org"}) {
+    var path;
+    if (Platform.isWindows) {
+      var home = Platform.environment['APPDATA'];
+      path = Path.join(home, "Pub", "Cache", "hosted", host, name);
+    } else {
+      var home = Platform.environment['HOME'];
+      path = Path.join(home, ".pub-cache", "hosted", host, name);
+    }
+    return load(new PluginLoader(new Directory(path)), args: args);
+  }
+  
   /**
    * [directory] is the location of all the plugins. [args] can be provided to
    * all the spawned plugins. If individual arguments are sent to each plugin

@@ -79,11 +79,10 @@ class Receiver {
   }
 
   /**
-   * [callback] is called everytime data is received. By default the listener
+   * [callback] is called every time data is received. By default the listener
    * [callback] is wrapped around the [handle] to ensure only the data needed
-   * is received in the plugin. The
-   * [callback] will automatically be canceled when [shouldQuit] is
-   * triggered to be true.
+   * is received in the plugin. The [callback] will automatically be canceled
+   * when [shouldQuit] is triggered to be true.
    */
   StreamSubscription listen(void callback(Map<dynamic, dynamic> data)) {
     _ss.onData((Map<String, dynamic> rec) {
