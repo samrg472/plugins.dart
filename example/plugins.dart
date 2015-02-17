@@ -1,9 +1,10 @@
 import 'package:plugins/loader.dart';
+import 'package:path/path.dart' as Path;
 import 'dart:io';
 
 void main() {
   PluginManager pm = new PluginManager();
-  Directory path = new Directory("example" + Platform.pathSeparator + "plugins");
+  Directory path = new Directory(Path.joinAll(["example", "plugins"]));
   int killReady = 0;
 
   pm.loadAll(path, followLinks: false).then((List<Plugin> plugins) {
