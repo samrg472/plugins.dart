@@ -208,11 +208,14 @@ class PluginManager {
   Future loadFromCache(String name, {List<String> args,
                                       String host: "pub.dartlang.org"}) {
     var path;
-    if (Platform.isWindows) {
-      var home = Platform.environment['APPDATA'];
+    var home = Platform.environment['PUB_CACHE'];
+    if (home != null) {
+      path = Path.join(home, "hosted", host, name);
+    } else if (Platform.isWindows) {
+      home = Platform.environment['APPDATA'];
       path = Path.join(home, "Pub", "Cache", "hosted", host, name);
     } else {
-      var home = Platform.environment['HOME'];
+      home = Platform.environment['HOME'];
       path = Path.join(home, ".pub-cache", "hosted", host, name);
     }
     return load(new PluginLoader(new Directory(path)), args: args);
