@@ -29,7 +29,8 @@ The plugins folder will look something like:
 ```
 .
 +-- test
-|   +-- main.dart
+|   |- bin
+|   |  +-- main.dart
 |   +-- pubspec.yaml
 |   +-- lib/
 |   +-- packages/
