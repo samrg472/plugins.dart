@@ -171,6 +171,9 @@ class PluginManager {
     var port = new ReceivePort();
     if (loader.name == null)
       throw new Exception("Unnamed plugin at: ${loader.directory.path}");
+    else if (!loader.packages)
+      throw new Exception("Plugin is missing packages: ${loader.directory.path}");
+
     Future<Isolate> pn = loader.load(port.sendPort, args);
 
     Completer completer = new Completer();
