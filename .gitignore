@@ -1,12 +1,11 @@
-# Don’t commit the following directories created by pub.
-build/
+# Pub files
 packages
 example/packages
 example/plugins/test/packages
-
-# Include when developing application packages.
 pubspec.lock
 
-# Don't commit project files created from eclipse
+# Project files
 .settings/
 .project
+.idea
+*.iml
