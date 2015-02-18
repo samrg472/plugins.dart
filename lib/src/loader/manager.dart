@@ -13,7 +13,15 @@ class PluginManager {
    */
   final Map<String, List> _plugins = new Map();
   final RequestManager _requests = new RequestManager();
-
+  
+  Pub get pub {
+    if (_pub != null) return _pub;
+    else return _pub = new Pub();
+  }
+  Pub _pub;
+  
+  PluginManager([this._pub]);
+  
   /**
    * Gets a [List] of all the loaded plugin names.
    */
@@ -205,20 +213,9 @@ class PluginManager {
     return completer.future;
   }
 
-  Future loadFromCache(String name, {List<String> args,
-                                      String host: "pub.dartlang.org"}) {
-    var path;
-    var home = Platform.environment['PUB_CACHE'];
-    if (home != null) {
-      path = Path.join(home, "hosted", host, name);
-    } else if (Platform.isWindows) {
-      home = Platform.environment['APPDATA'];
-      path = Path.join(home, "Pub", "Cache", "hosted", host, name);
-    } else {
-      home = Platform.environment['HOME'];
-      path = Path.join(home, ".pub-cache", "hosted", host, name);
-    }
-    return load(new PluginLoader(new Directory(path)), args: args);
+  Future loadFromCache(String name, {List<String> args}) {
+    var loader = pub.resolve(name);
+    return load(loader, args: args);
   }
   
   /**

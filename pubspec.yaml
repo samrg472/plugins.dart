@@ -8,3 +8,4 @@ environment:
 dependencies:
   path: '>=1.2.1 <2.0.0'
   yaml: '>=2.0.0 <2.2.0'
+  pub_semver: ">=1.1.0 <2.0.0"
