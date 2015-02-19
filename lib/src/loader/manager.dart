@@ -213,8 +213,9 @@ class PluginManager {
     return completer.future;
   }
 
-  Future loadFromCache(String name, {List<String> args}) {
-    var loader = pub.resolve(name);
+  Future loadFromCache(String name, {List<String> args,
+                                      String hostName: "pub.dartlang.org"}) {
+    var loader = pub.resolveHosted(name, hostName);
     return load(loader, args: args);
   }
   

@@ -2,65 +2,92 @@ part of plugins.loader;
 
 class Pub {
   
-  final String path;
-  final List<Package> _packages;
+  final Map<String, _PubHost> _hosts;
 
   /**
    * [cache] is the path to the cache directory. The default being
    * the retrieved path from cacheDir()
    */
-  factory Pub({String cache}) {
-    if (cache == null)
-      cache = hostedCacheDir();
-    var dir = new Directory(cache);
-    if (!dir.existsSync())
-      throw new Exception("Cache directory non-existant; $cache");
-    var packs = dir.listSync(followLinks: false);
-    var filtered = <Package>[];
-    packs.forEach((FileSystemEntity e) {
-      var p = e.path;
-      if (FileSystemEntity.isDirectorySync(p)) {
-        var base = Path.basename(p);
-        var data = base.split("-");
-        var name = data[0];
-        var version = new Version.parse(data[1]);
-        filtered.add(new Package(p, base, name, version));
-      }
-    });
-    return new Pub._internal(cache, filtered);
+  factory Pub() {
+    var hosts = _PubHost.resolveAllHosts();
+    return new Pub._internal(hosts);
   }
   
-  Pub._internal(this.path, this._packages);
+  Pub._internal(this._hosts);
+
+  /**
+   * Resolves a hosted package.
+   */
+  PluginLoader resolveHosted(String name, String hostName) {
+    var host = _hosts[hostName];
+    if (host == null)
+      throw new Exception("Unable to resolve pub cache host: $host");
+    var depend = new _Dependency(name, host);
+    return depend.resolve();
+  }
   
-  PluginLoader resolve(String name) {
-    var p = new Directory(Path.join(path, name));
+  static String hostedCacheDir() {
+    var path = baseCacheDir();
+    return Path.join(path, "hosted");
+  }
+  
+  static String baseCacheDir() {
+    var path;
+    var home = Platform.environment['PUB_CACHE'];
+    if (home != null) {
+      path = home;
+    } else if (Platform.isWindows) {
+      home = Platform.environment['APPDATA'];
+      path = Path.join(home, "Pub", "Cache");
+    } else {
+      home = Platform.environment['HOME'];
+      path = Path.join(home, ".pub-cache");
+    }
+    return path;
+  }
+}
+
+class _Dependency {
+  
+  final String name;
+  final _PubHost host;
+  
+  //List<_Dependency> get dependencies => _dependencies;
+  //List<_Dependency> _dependencies;
+  
+  _Dependency(this.name, this.host);
+
+  /**
+   * Resolves a hosted package.
+   */
+  PluginLoader resolve() {
+    var p = new Directory(Path.join(host.path, name));
     if (!p.existsSync())
       throw new Exception("Unable to resolve pub cache plugin at: $p");
     var loader = new PluginLoader(p);
     var packages = Path.join(p.path, "bin", "packages");
-    if (!FileSystemEntity.isDirectorySync(packages))
-      new Directory(packages).createSync();
-    handleBinPackages(name, loader, packages);
+    _handleBinPackages(loader, packages);
     return loader;
   }
 
-  void handleBinPackages(String baseName, PluginLoader plugin, String packageDir) {
+  void _handleBinPackages(PluginLoader plugin, String packageDir) {
     var depends = plugin.pubspec['dependencies'];
-    var packages = getPackages(baseName, depends);
+    var packages = getPackages(depends);
     for (var p in packages) {
-      var dir = new Link(Path.join(packageDir, p.baseName.split("-")[0]));
-      if (dir.existsSync()) {
-        dir.deleteSync();
+      var link = new Link(Path.join(packageDir, p.baseName.split("-")[0]));
+      if (link.existsSync()) {
+        // Ensure the most up to date package is always used
+        link.deleteSync();
       }
-      dir.createSync(Path.join(p.path, "lib"));
+      link.createSync(Path.join(p.path, "lib"), recursive: true);
     }
   }
-  
-  List<Package> getPackages(String baseName, var depends) {
+
+  List<Package> getPackages(var depends) {
     var packages = <String, Package>{};
     if (depends != null) {
-      _packages.forEach((pack) {
-        if (pack.baseName == baseName)
+      host.packages.forEach((pack) {
+        if (pack.baseName == name)
           return;
         var depend = depends[pack.name];
         if (depend != null) {
@@ -78,27 +105,47 @@ class Pub {
     // TODO: handle transitive dependencies
     // TODO: handle dependencies on other pub servers
     // TODO: handle dependencies on git
-    return packages;
+    return packages.values;
   }
+}
+
+class _PubHost {
   
-  static String hostedCacheDir({String host: "pub.dartlang.org"}) {
-    var path = baseCacheDir();
-    return Path.join(path, "hosted", host);
-  }
+  final String name;
+  final String path;
+  final List<Package> packages;
   
-  static String baseCacheDir() {
-    var path;
-    var home = Platform.environment['PUB_CACHE'];
-    if (home != null) {
-      path = home;
-    } else if (Platform.isWindows) {
-      home = Platform.environment['APPDATA'];
-      path = Path.join(home, "Pub", "Cache");
-    } else {
-      home = Platform.environment['HOME'];
-      path = Path.join(home, ".pub-cache");
+  _PubHost(this.name, this.path, this.packages);
+  
+  static _PubHost resolveHost(String host) {
+    var hosted = Path.join(Pub.hostedCacheDir(), host);
+    var packages = <Package>[];
+    if (FileSystemEntity.isDirectorySync(hosted)) {
+      var hostDir = new Directory(hosted);
+      hostDir.listSync(followLinks: false).forEach((entity) {
+        var packagePath = entity.path;
+        if (FileSystemEntity.isDirectorySync(packagePath)) {
+          var base = Path.basename(packagePath);
+          var data = base.split("-");
+          var name = data[0];
+          var version = new Version.parse(data[1]);
+          packages.add(new Package(packagePath, base, name, version));
+        }
+      });
     }
-    return path;
+    return new _PubHost(host, hosted, packages);
+  }
+  
+  static Map<String, _PubHost> resolveAllHosts() {
+    var hosts = <String, _PubHost>{};
+    var hosted = Pub.hostedCacheDir();
+    if (FileSystemEntity.isDirectorySync(hosted)) {
+      new Directory(hosted).listSync(followLinks: false).forEach((hostEntity) {
+        var baseName = Path.basename(hostEntity.path);
+        hosts[baseName] = resolveHost(baseName);
+      });
+    }
+    return hosts;
   }
 }
 
