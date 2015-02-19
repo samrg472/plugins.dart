@@ -2,18 +2,20 @@ part of plugins.loader;
 
 class Pub {
   
+  final String cacheDir;
   final Map<String, _PubHost> _hosts;
 
   /**
    * [cache] is the path to the cache directory. The default being
    * the retrieved path from cacheDir()
    */
-  factory Pub() {
-    var hosts = _PubHost.resolveAllHosts();
-    return new Pub._internal(hosts);
+  factory Pub({String cacheDir}) {
+    if (cacheDir == null) cacheDir = _baseCacheDir();
+    var hosts = _PubHost.resolveAllHosts(cacheDir);
+    return new Pub._internal(cacheDir, hosts);
   }
   
-  Pub._internal(this._hosts);
+  Pub._internal(this.cacheDir, this._hosts);
 
   /**
    * Resolves a hosted package.
@@ -26,12 +28,7 @@ class Pub {
     return depend.resolve();
   }
   
-  static String hostedCacheDir() {
-    var path = baseCacheDir();
-    return Path.join(path, "hosted");
-  }
-  
-  static String baseCacheDir() {
+  static String _baseCacheDir() {
     var path;
     var home = Platform.environment['PUB_CACHE'];
     if (home != null) {
@@ -110,15 +107,15 @@ class _Dependency {
 }
 
 class _PubHost {
-  
+
   final String name;
   final String path;
   final List<Package> packages;
   
   _PubHost(this.name, this.path, this.packages);
   
-  static _PubHost resolveHost(String host) {
-    var hosted = Path.join(Pub.hostedCacheDir(), host);
+  static _PubHost resolveHost(String dir, String host) {
+    var hosted = Path.join(dir, host);
     var packages = <Package>[];
     if (FileSystemEntity.isDirectorySync(hosted)) {
       var hostDir = new Directory(hosted);
@@ -136,16 +133,20 @@ class _PubHost {
     return new _PubHost(host, hosted, packages);
   }
   
-  static Map<String, _PubHost> resolveAllHosts() {
+  static Map<String, _PubHost> resolveAllHosts(String cacheDir) {
+    var hosted = hostedCacheDir(cacheDir);
     var hosts = <String, _PubHost>{};
-    var hosted = Pub.hostedCacheDir();
     if (FileSystemEntity.isDirectorySync(hosted)) {
       new Directory(hosted).listSync(followLinks: false).forEach((hostEntity) {
         var baseName = Path.basename(hostEntity.path);
-        hosts[baseName] = resolveHost(baseName);
+        hosts[baseName] = resolveHost(hosted, baseName);
       });
     }
     return hosts;
+  }
+  
+  static String hostedCacheDir(String cacheDir) {
+    return Path.join(cacheDir, "hosted");
   }
 }
 
